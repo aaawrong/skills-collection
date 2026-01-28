@@ -1,1 +1,1 @@
-collcet userful skills
+collect userful skills
