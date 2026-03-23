@@ -75,13 +75,13 @@ Use C-style `for` only when you need non-standard iteration (e.g., decrementing,
 
 ```go
 // Good
-end := min(offset+limit, int32(len(metrics)))
-count := max(rulecache.SubjectRiskCount(kind.SubjectUser, row.ID), 0)
+end := min(offset+limit, len(items))
+count := max(getScore(id), 0)
 
 // Bad
 end := offset + limit
-if end > int32(len(metrics)) {
-    end = int32(len(metrics))
+if end > len(items) {
+    end = len(items)
 }
 ```
 

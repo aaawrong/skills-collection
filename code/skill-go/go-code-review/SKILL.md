@@ -62,6 +62,7 @@ allowed-tools: Bash(bash:*)
 ## Concurrency
 
 - [ ] **Goroutine lifetimes**: Clear when/whether goroutines exit; document if not obvious → [go-concurrency](../go-concurrency/SKILL.md)
+- [ ] **WaitGroup.Go**: Use `wg.Go(func() { ... })` instead of `wg.Add(1)` + `go func() { defer wg.Done() }` (Go 1.24+) → [go-concurrency](../go-concurrency/SKILL.md)
 - [ ] **Synchronous functions**: Prefer sync over async; let callers add concurrency if needed → [go-concurrency](../go-concurrency/SKILL.md)
 - [ ] **Contexts**: First parameter; not in structs; no custom Context types; pass even if you think you don't need to → [go-context](../go-context/SKILL.md)
 
@@ -110,9 +111,14 @@ allowed-tools: Bash(bash:*)
 
 ## Style
 
+- [ ] **Range loops**: Use `range` over C-style `for` loops; use `for range N` for integer iteration (Go 1.22+) → [go-style-core](../go-style-core/SKILL.md)
+- [ ] **Built-in min/max**: Use `min()` / `max()` instead of manual if-else comparisons (Go 1.21+) → [go-style-core](../go-style-core/SKILL.md)
 - [ ] **Line length**: No rigid limit, but avoid uncomfortably long lines; break by semantics, not arbitrary length → [go-style-core](../go-style-core/SKILL.md)
 - [ ] **Naked returns**: Only in short functions; explicit returns in medium/large functions → [go-style-core](../go-style-core/SKILL.md)
 - [ ] **Pass values**: Don't use pointers just to save bytes; pass `string` not `*string` for small fixed-size types → [go-performance](../go-performance/SKILL.md)
+- [ ] **Collection helpers**: Use `maps.Copy`, `maps.Collect`, `slices.Sort`, `slices.Contains` instead of manual loops → [go-performance](../go-performance/SKILL.md)
+- [ ] **strings.Cut**: Prefer `strings.Cut` over `strings.Index` + manual slicing → [go-performance](../go-performance/SKILL.md)
+- [ ] **strings.SplitSeq**: Prefer `strings.SplitSeq` over `strings.Split` when iterating (Go 1.24+) → [go-performance](../go-performance/SKILL.md)
 - [ ] **String concatenation**: `+` for simple; `fmt.Sprintf` for formatting; `strings.Builder` for loops → [go-performance](../go-performance/SKILL.md)
 
 ---

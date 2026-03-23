@@ -108,11 +108,11 @@ Use the `maps` and `slices` standard library packages instead of manual loops. T
 
 ```go
 // Good
-dst := make(WeakPasswordResult, len(src))
+dst := make(map[string]int, len(src))
 maps.Copy(dst, src)
 
 // Bad
-dst := make(WeakPasswordResult, len(src))
+dst := make(map[string]int, len(src))
 for k, v := range src {
     dst[k] = v
 }
@@ -122,12 +122,12 @@ for k, v := range src {
 
 ```go
 // Good
-result := maps.Collect(cache.recordCountByRule.Range)
+result := maps.Collect(seq)
 
 // Bad
-result := make(map[int32]int64, cache.recordCountByRule.Size())
-for ruleID, count := range cache.recordCountByRule.Range {
-    result[ruleID] = count
+result := make(map[string]int, size)
+for k, v := range seq {
+    result[k] = v
 }
 ```
 
@@ -147,12 +147,12 @@ sort.Slice(appIDs, func(i, j int) bool {
 
 ```go
 // Good
-exists := slices.Contains(fieldKeys[field.Name], sign)
+exists := slices.Contains(names, target)
 
 // Bad
 exists := false
-for _, v := range fieldKeys[field.Name] {
-    if v == sign {
+for _, v := range names {
+    if v == target {
         exists = true
         break
     }
@@ -179,19 +179,24 @@ Choose the right strategy based on complexity:
 
 ```go
 // Good: O(n) — uses Builder
-var formattedStr strings.Builder
-formattedStr.WriteString(valueStr[:commaIndex])
-for i := commaIndex; i < lenValueStr; i += 3 {
-    formattedStr.WriteString("," + valueStr[i:i+3])
+var b strings.Builder
+for _, s := range items {
+    if b.Len() > 0 {
+        b.WriteString(", ")
+    }
+    b.WriteString(s)
 }
-return formattedStr.String()
+return b.String()
 
 // Bad: O(n²) — repeated += allocates a new string each iteration
-formattedStr := valueStr[:commaIndex]
-for i := commaIndex; i < lenValueStr; i += 3 {
-    formattedStr += "," + valueStr[i:i+3]
+result := ""
+for _, s := range items {
+    if result != "" {
+        result += ", "
+    }
+    result += s
 }
-return formattedStr
+return result
 ```
 
 ### Prefer strings.Cut over strings.Index
@@ -202,18 +207,16 @@ return formattedStr
 // Good
 before, _, ok := strings.Cut(s, "-")
 if !ok {
-    return parseToVersion(s)
-} else {
-    return parseToVersion(before)
+    return parse(s)
 }
+return parse(before)
 
 // Bad
-indexDash := strings.Index(s, "-")
-if indexDash == -1 {
-    return parseToVersion(s)
-} else {
-    return parseToVersion(s[:indexDash])
+idx := strings.Index(s, "-")
+if idx == -1 {
+    return parse(s)
 }
+return parse(s[:idx])
 ```
 
 ### Prefer strings.SplitSeq over strings.Split
