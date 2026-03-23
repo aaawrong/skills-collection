@@ -53,16 +53,21 @@ var _ http.Handler = (*Handler)(nil)
 
 ## Copy Slices and Maps at Boundaries
 
-Slices and maps contain pointers to underlying data. Copy at API boundaries to prevent unintended modifications.
+Slices and maps contain pointers to underlying data. Copy at API boundaries to prevent unintended modifications. Use the `slices` and `maps` standard library packages for cleaner copies.
 
 ```go
 // Receiving: copy incoming slice
-d.trips = make([]Trip, len(trips))
-copy(d.trips, trips)
+d.trips = slices.Clone(trips)
 
 // Returning: copy map before returning
-result := make(map[string]int, len(s.counters))
-for k, v := range s.counters { result[k] = v }
+result := maps.Clone(s.counters)
+```
+
+For maps with specific target capacity or custom logic, use `maps.Copy`:
+
+```go
+dst := make(map[string]int, len(src))
+maps.Copy(dst, src)
 ```
 
 > Read [references/BOUNDARY-COPYING.md](references/BOUNDARY-COPYING.md) when copying slices or maps at API boundaries, or deciding when defensive copies are necessary vs. when they can be skipped.

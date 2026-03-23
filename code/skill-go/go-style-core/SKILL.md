@@ -32,6 +32,63 @@ Run `gofmt` — no exceptions. There is **no rigid line length limit**, but Uber
 
 ---
 
+## Range-based Loops
+
+> **Normative**: Prefer `range` loops over C-style `for` loops.
+
+Go's `range` is clearer, less error-prone, and supports iterating over integers since Go 1.22.
+
+```go
+// Good: range over slice
+for i := range others {
+    ...
+}
+
+// Good: range over integer (Go 1.22+)
+for i := range 5 {
+    ...
+}
+
+// Good: range when index is unused
+for range size {
+    ...
+}
+
+// Bad: C-style loop
+for i := 0; i < num; i++ {
+    ...
+}
+
+// Bad: C-style loop over slice length
+for i := 0; i < len(nodes); i++ {
+    ...
+}
+```
+
+Use C-style `for` only when you need non-standard iteration (e.g., decrementing, step > 1, or modifying the index mid-loop).
+
+---
+
+## Use Built-in min/max
+
+> **Normative**: Use the built-in `min()` and `max()` functions (Go 1.21+) instead of manual if-else comparisons.
+
+```go
+// Good
+end := min(offset+limit, int32(len(metrics)))
+count := max(rulecache.SubjectRiskCount(kind.SubjectUser, row.ID), 0)
+
+// Bad
+end := offset + limit
+if end > int32(len(metrics)) {
+    end = int32(len(metrics))
+}
+```
+
+`min` and `max` work with any ordered type and accept variadic arguments.
+
+---
+
 ## Reduce Nesting
 
 Handle error cases and special conditions first. Return early or continue the loop to keep the "happy path" unindented.

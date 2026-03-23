@@ -100,6 +100,69 @@ func process(s string) { // not *string — strings are small fixed-size headers
 
 ---
 
+## Prefer Standard Library Collection Helpers
+
+Use the `maps` and `slices` standard library packages instead of manual loops. They are clearer, less error-prone, and often more efficient.
+
+### maps.Copy — Copy maps
+
+```go
+// Good
+dst := make(WeakPasswordResult, len(src))
+maps.Copy(dst, src)
+
+// Bad
+dst := make(WeakPasswordResult, len(src))
+for k, v := range src {
+    dst[k] = v
+}
+```
+
+### maps.Collect — Collect iterator into map
+
+```go
+// Good
+result := maps.Collect(cache.recordCountByRule.Range)
+
+// Bad
+result := make(map[int32]int64, cache.recordCountByRule.Size())
+for ruleID, count := range cache.recordCountByRule.Range {
+    result[ruleID] = count
+}
+```
+
+### slices.Sort — Sort ordered slices
+
+```go
+// Good
+slices.Sort(appIDs)
+
+// Bad
+sort.Slice(appIDs, func(i, j int) bool {
+    return appIDs[i] < appIDs[j]
+})
+```
+
+### slices.Contains — Check element existence
+
+```go
+// Good
+exists := slices.Contains(fieldKeys[field.Name], sign)
+
+// Bad
+exists := false
+for _, v := range fieldKeys[field.Name] {
+    if v == sign {
+        exists = true
+        break
+    }
+}
+```
+
+Also consider: `slices.Clone`, `slices.Index`, `slices.Compact`, `maps.Keys`, `maps.Values`.
+
+---
+
 ## String Concatenation
 
 Choose the right strategy based on complexity:
@@ -111,6 +174,63 @@ Choose the right strategy based on complexity:
 | `strings.Builder` | Loop/piecemeal construction |
 | `strings.Join` | Joining a slice |
 | Backtick literal | Constant multi-line text |
+
+### strings.Builder for loop concatenation
+
+```go
+// Good: O(n) — uses Builder
+var formattedStr strings.Builder
+formattedStr.WriteString(valueStr[:commaIndex])
+for i := commaIndex; i < lenValueStr; i += 3 {
+    formattedStr.WriteString("," + valueStr[i:i+3])
+}
+return formattedStr.String()
+
+// Bad: O(n²) — repeated += allocates a new string each iteration
+formattedStr := valueStr[:commaIndex]
+for i := commaIndex; i < lenValueStr; i += 3 {
+    formattedStr += "," + valueStr[i:i+3]
+}
+return formattedStr
+```
+
+### Prefer strings.Cut over strings.Index
+
+`strings.Cut` combines `Index` + slicing into a single, clearer call:
+
+```go
+// Good
+before, _, ok := strings.Cut(s, "-")
+if !ok {
+    return parseToVersion(s)
+} else {
+    return parseToVersion(before)
+}
+
+// Bad
+indexDash := strings.Index(s, "-")
+if indexDash == -1 {
+    return parseToVersion(s)
+} else {
+    return parseToVersion(s[:indexDash])
+}
+```
+
+### Prefer strings.SplitSeq over strings.Split
+
+`strings.SplitSeq` (Go 1.24+) returns an iterator, avoiding the intermediate `[]string` allocation:
+
+```go
+// Good
+for param := range strings.SplitSeq(query, "&") {
+    ...
+}
+
+// Bad
+for _, param := range strings.Split(query, "&") {
+    ...
+}
+```
 
 > Read [references/STRING-OPTIMIZATION.md](references/STRING-OPTIMIZATION.md) when choosing a string concatenation strategy, using strings.Builder in loops, or deciding between fmt.Sprintf and manual concatenation.
 
@@ -141,6 +261,11 @@ go test -bench=. -benchmem -count=10 ./...
 | Small fixed-size args | `*string`, `*io.Reader` | `string`, `io.Reader` | No indirection |
 | Simple string join | `s1 + " " + s2` | (already good) | Use `+` for few strings |
 | Loop string build | Repeated `+=` | `strings.Builder` | O(n) vs O(n²) |
+| Copy map | Manual for-range | `maps.Copy(dst, src)` | Clearer, less code |
+| Sort slice | `sort.Slice` + comparator | `slices.Sort(s)` | Clearer, type-safe |
+| Find in slice | Manual for-range loop | `slices.Contains(s, v)` | Clearer, less code |
+| Split string | `strings.Index` + slice | `strings.Cut(s, sep)` | Clearer, safer |
+| Iterate splits | `strings.Split` | `strings.SplitSeq` | No `[]string` alloc |
 
 ---
 

@@ -30,18 +30,25 @@ channel), data races, memory issues, and resource leaks.
    into synchronous functions
 
 ```go
-// Good: Clear lifetime with WaitGroup
+// Good: Clear lifetime with WaitGroup.Go (Go 1.24+)
 var wg sync.WaitGroup
 for item := range queue {
-    wg.Add(1)
-    go func() { defer wg.Done(); process(ctx, item) }()
+    wg.Go(func() { process(ctx, item) })
 }
 wg.Wait()
 ```
 
 ```go
-// Bad: No way to stop or wait
-go func() { for { flush(); time.Sleep(delay) } }()
+// Bad: Manual Add/Done is verbose and error-prone
+var wg sync.WaitGroup
+for item := range queue {
+    wg.Add(1)
+    go func() {
+        defer wg.Done()
+        process(ctx, item)
+    }()
+}
+wg.Wait()
 ```
 
 **Test for leaks** with [go.uber.org/goleak](https://pkg.go.dev/go.uber.org/goleak).
