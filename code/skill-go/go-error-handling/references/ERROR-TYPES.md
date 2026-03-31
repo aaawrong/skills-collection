@@ -130,12 +130,19 @@ func (e *PathError) Error() string {
 func (e *PathError) Unwrap() error { return e.Err }
 ```
 
-Callers can use `errors.As` to extract the structured error:
+On Go 1.25+, prefer `errors.AsType` when extracting structured errors. It keeps
+the matched value scoped to the branch where it is used:
 
 ```go
+// Good
+if pathErr, ok := errors.AsType[*os.PathError](err); ok {
+    fmt.Println("failed path:", pathErr.Path)
+}
+
+// Bad
 var pathErr *os.PathError
 if errors.As(err, &pathErr) {
-    fmt.Println("Failed path:", pathErr.Path)
+    fmt.Println("failed path:", pathErr.Path)
 }
 ```
 
@@ -150,4 +157,4 @@ if errors.As(err, &pathErr) {
 | Matching needed, static message | `var ErrFoo = errors.New(...)` |
 | Matching needed, dynamic message | custom struct type |
 | Checking sentinel errors | `errors.Is(err, ErrFoo)` |
-| Extracting structured errors | `errors.As(err, &target)` |
+| Extracting structured errors | `errors.AsType[*MyError](err)` |
